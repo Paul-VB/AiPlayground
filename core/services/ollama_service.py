@@ -9,17 +9,14 @@ from core.services import tool_service
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 OLLAMA_CHAT_MODEL = "llama3.1:8b"
 
-
-def mock_weather_function(location: str, unit: str = "celsius") -> str:
-	return f"Weather in {location} is 22°{unit[0].upper()}"
-
-
-
 def chat(chat_request: ChatRequest) -> ChatResponse:
-	initial_response = _chat(chat_request)
+	_inject_tools(chat_request)
+	initial_response = _get_chat_response(chat_request)
 	# if initial_response.tool_calls is empty, then we dont need to call tools and we can just return the message content
 	if not initial_response.message.tool_calls:
-		return initial_response
+		chat_request.tools = []
+		tooless_response = _get_chat_response(chat_request)
+		return tooless_response
 
 	#for testing, i just wanna see the tool calls
 	print("Tool calls to execute:") 
@@ -35,13 +32,12 @@ def build_chat_request(message: str, model=OLLAMA_CHAT_MODEL, stream=False) -> C
 	chat_request = ChatRequest(model=model, messages=[userMessage], stream=stream)
 	return chat_request
 
-
-def _chat(chat_request: ChatRequest) -> ChatResponse:
+def _inject_tools(chat_request: ChatRequest):
 	for tool in tool_service.tools_that_exist:	
 		ollama_tool = tool_service.to_ollama_tool(tool)
 		chat_request.tools.append(ollama_tool)
-	# Convert the chat request to a dictionary and send it to the Ollama API
 
+def _get_chat_response(chat_request: ChatRequest) -> ChatResponse:
 	http_response = requests.post(OLLAMA_CHAT_URL, json=asdict(chat_request))
 	if not http_response.ok:
 		raise ValueError(f"Error from Ollama: {http_response.status_code}")
