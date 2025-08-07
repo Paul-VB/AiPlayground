@@ -11,7 +11,7 @@ def get_weather_tool():
 		description="Get current weather for a location",
 		parameters={
 			"location": ToolParameter("string", "City name"),
-			"unit": ToolParameter("string", "Temperature unit (celsius or fahrenheit)"),
+			"unit": ToolParameter("string", "Temperature unit", enum=["celsius", "fahrenheit"]),
 		},
 		handler=handler,
 	)
@@ -24,7 +24,7 @@ tools_that_exist = [
 ]
 
 
-def to_ollama_tool(tool_def: ToolDefinition) -> tool:
+def to_ollama_tool(tool_def):
 	thereAreAnyRequriedParams = any(param.required for param in tool_def.parameters.values())
     
 	ollama_tool = {
@@ -46,3 +46,15 @@ def to_ollama_tool(tool_def: ToolDefinition) -> tool:
 		},
 	}
 	return ollama_tool
+
+def execute_tool(tool_call):
+	# Find the tool definition by name
+	correct_tool_def = None
+	for tool_def in tools_that_exist:
+		if tool_def.name == tool_call.function.name:
+			correct_tool_def = tool_def
+			break
+
+	#call the tool
+	tool_call_result = correct_tool_def.handler(**tool_call.function.arguments)
+	return tool_call_result

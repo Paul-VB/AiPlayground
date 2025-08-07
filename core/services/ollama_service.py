@@ -9,7 +9,7 @@ from core.services import tool_service
 OLLAMA_CHAT_URL = "http://localhost:11434/api/chat"
 OLLAMA_CHAT_MODEL = "llama3.1:8b"
 
-def chat(chat_request: ChatRequest) -> ChatResponse:
+def get_chat_response(chat_request: ChatRequest) -> ChatResponse:
 	_inject_tools(chat_request)
 	initial_response = _get_chat_response(chat_request)
 	# if initial_response.tool_calls is empty, then we dont need to call tools and we can just return the message content
@@ -18,13 +18,17 @@ def chat(chat_request: ChatRequest) -> ChatResponse:
 		tooless_response = _get_chat_response(chat_request)
 		return tooless_response
 
-	#for testing, i just wanna see the tool calls
-	print("Tool calls to execute:") 
 	for tool_call in initial_response.message.tool_calls:
-		print(f"Tool name: {tool_call.function.name}")
-		print(f"Arguments: {tool_call.function.arguments}")
-		print("---")
-	# You can add actual execution logic here later
+		tool_call_result = tool_service.execute_tool(tool_call)
+		tool_message = {
+			"role": "tool",
+			"content": tool_call_result,
+			"tool_call_id": tool_call.function.name,  # or tool_call["id"]
+		}
+		chat_request.messages.append(tool_message)
+
+	response_with_tool_results = _get_chat_response(chat_request)
+	return response_with_tool_results
 
 
 def build_chat_request(message: str, model=OLLAMA_CHAT_MODEL, stream=False) -> ChatRequest:

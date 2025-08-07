@@ -11,7 +11,7 @@ def chat_session():
 		if user_input.lower() == "exit":
 			break
 		chat_request = ollama_service.build_chat_request(user_input)
-		response = ollama_service.chat(chat_request)
+		response = ollama_service.get_chat_response(chat_request)
 		print(f"Bot: {response}")
 
 	# Placeholder for chat session logic
