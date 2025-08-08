@@ -12,9 +12,16 @@ def chat_session():
 			break
 		chat_request = ollama_service.build_chat_request(user_input)
 		response = ollama_service.get_chat_response(chat_request)
-		print(f"Bot: {response}")
+		response_text = parse_chat_response(response)
+		print(f"Bot: {response_text}")
 
 	# Placeholder for chat session logic
+	pass
+
+def parse_chat_response(chat_response):
+	#get the messages f
+	message = chat_response.message.content
+	return message
 	pass
 
 if __name__ == "__main__":
