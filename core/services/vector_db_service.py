@@ -27,7 +27,13 @@ def _vectorize_data(data: str):
 	return vectorize_data_response.json()['embedding']
 
 
-def train_on_resource(document_text: str, resource_name: str, metadata=None):
+def train_on_resource_file(file_path: str, resource_name: str, metadata=None):
+	with open(file_path, 'r', encoding='utf-8') as file:
+		document_text = file.read()
+	train_on_resource_text(document_text, resource_name, metadata)
+
+
+def train_on_resource_text(document_text: str, resource_name: str, metadata=None):
 	collection = _chroma_collection
 
 	existing_resources = collection.get()['ids'] 
@@ -40,7 +46,7 @@ def train_on_resource(document_text: str, resource_name: str, metadata=None):
 		documents=[document_text],
 		embeddings=[vectorized_data],
 		ids=[resource_name],
-		metadatas=[metadata or {}]
+		metadatas=[metadata or {"info": ""}]
 	)
 
 def query_against_resource(query_text: str, resource_name: str = None, n_results=5):
@@ -59,8 +65,8 @@ def query_against_resource(query_text: str, resource_name: str = None, n_results
 			ids=[resource_name],
 			n_results=n_results
 		)
-
-	return result
+	result_data = result["documents"][0][0]
+	return result_data
 
 def list_resources():
 	# Get ChromaDB ready

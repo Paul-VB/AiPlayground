@@ -1,5 +1,5 @@
-from core.models.ollama import tool
 from core.models.ollama.tool_definition import ToolDefinition, ToolParameter
+from core.services import vector_db_service
 
 # Declare each tool in its own function
 
@@ -16,10 +16,23 @@ def get_weather_tool():
 		handler=handler,
 	)
 
+def get_pauls_2016_history_report_tool():
+	def handler(query):
+		return vector_db_service.query_against_resource(query, "pauls 2016 history report")
+	return ToolDefinition(
+		name="pauls_2016_history_report",
+		description="get inormation related to Paul's 2016 history report",
+		parameters={
+			"query": ToolParameter("string", "Query to search in Paul's 2016 history report"),
+		},
+		handler=handler,
+	)
+
 # Add more tool functions here...
 
 tools_that_exist = [
 	get_weather_tool(),
+	get_pauls_2016_history_report_tool(),
 	# add more tool functions here...
 ]
 
